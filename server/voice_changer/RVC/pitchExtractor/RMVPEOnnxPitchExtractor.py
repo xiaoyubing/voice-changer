@@ -5,7 +5,7 @@ from voice_changer.RVC.deviceManager.DeviceManager import DeviceManager
 import onnxruntime
 
 
-class RMVPOnnxEPitchExtractor(PitchExtractor):
+class RMVPEOnnxPitchExtractor(PitchExtractor):
 
     def __init__(self, file: str, gpu: int):
         super().__init__()
@@ -52,7 +52,7 @@ class RMVPOnnxEPitchExtractor(PitchExtractor):
             audio = np.expand_dims(audio, axis=0)
 
             output = self.onnx_session.run(
-                ["f0", "uv"],
+                ["pitchf"],
                 {
                     "waveform": audio.astype(np.float32),
                     "threshold": np.array([0.3]).astype(np.float32),

@@ -1,4 +1,4 @@
-'''
+"""
 ■ VoiceChangerV2
 - VoiceChangerとの差分
 ・リサンプル処理の無駄を省くため、VoiceChangerModelにリサンプル処理を移譲
@@ -7,7 +7,7 @@
 - 適用VoiceChangerModel
 ・DiffusionSVC
 ・RVC
-'''
+"""
 
 from typing import Any, Union
 
@@ -18,11 +18,12 @@ import numpy as np
 from dataclasses import dataclass, asdict, field
 import onnxruntime
 from mods.log_control import VoiceChangaerLogger
-from voice_changer.Beatrice.Beatrice import Beatrice
+
+# from voice_changer.Beatrice.Beatrice import Beatrice
 
 from voice_changer.IORecorder import IORecorder
 
-from voice_changer.utils.Timer import Timer
+from voice_changer.utils.Timer import Timer2
 from voice_changer.utils.VoiceChangerIF import VoiceChangerIF
 from voice_changer.utils.VoiceChangerModel import AudioInOut, VoiceChangerModel
 from Exceptions import (
@@ -98,7 +99,8 @@ class VoiceChangerV2(VoiceChangerIF):
     def setModel(self, model: VoiceChangerModel):
         self.voiceChanger = model
         self.voiceChanger.setSamplingRate(self.settings.inputSampleRate, self.settings.outputSampleRate)
-        if isinstance(model, Beatrice):
+        # if model.voiceChangerType == "Beatrice" or model.voiceChangerType == "LLVC":
+        if model.voiceChangerType == "Beatrice":
             self.noCrossFade = True
         else:
             self.noCrossFade = False
@@ -137,7 +139,14 @@ class VoiceChangerV2(VoiceChangerIF):
             if key == "recordIO" and val == 1:
                 if hasattr(self, "ioRecorder"):
                     self.ioRecorder.close()
-                self.ioRecorder = IORecorder(STREAM_INPUT_FILE, STREAM_OUTPUT_FILE, self.settings.inputSampleRate, self.settings.outputSampleRate)
+                self.ioRecorder = IORecorder(
+                    STREAM_INPUT_FILE,
+                    STREAM_OUTPUT_FILE,
+                    self.settings.inputSampleRate,
+                    self.settings.outputSampleRate,
+                    # 16000,
+                )
+                print(f"-------------------------- - - - {self.settings.inputSampleRate}, {self.settings.outputSampleRate}")
             if key == "recordIO" and val == 0:
                 if hasattr(self, "ioRecorder"):
                     self.ioRecorder.close()
@@ -208,10 +217,10 @@ class VoiceChangerV2(VoiceChangerIF):
             if self.voiceChanger is None:
                 raise VoiceChangerIsNotSelectedException("Voice Changer is not selected.")
 
-            with Timer("main-process") as t:
+            with Timer2("main-process", False) as t:
                 processing_sampling_rate = self.voiceChanger.get_processing_sampling_rate()
 
-                if self.noCrossFade:  # Beatrice
+                if self.noCrossFade:  # Beatrice, LLVC
                     audio = self.voiceChanger.inference(
                         receivedData,
                         crossfade_frame=0,
@@ -225,11 +234,11 @@ class VoiceChangerV2(VoiceChangerIF):
                     block_frame = receivedData.shape[0]
                     crossfade_frame = min(self.settings.crossFadeOverlapSize, block_frame)
                     self._generate_strength(crossfade_frame)
-            
+
                     audio = self.voiceChanger.inference(
                         receivedData,
                         crossfade_frame=crossfade_frame,
-                        sola_search_frame=sola_search_frame
+                        sola_search_frame=sola_search_frame,
                     )
 
                     if hasattr(self, "sola_buffer") is True:
@@ -274,13 +283,18 @@ class VoiceChangerV2(VoiceChangerIF):
             mainprocess_time = t.secs
 
             # 後処理
-            with Timer("post-process") as t:
+            with Timer2("post-process", False) as t:
                 result = result.astype(np.int16)
 
                 print_convert_processing(f" Output data size of {result.shape[0]}/{processing_sampling_rate}hz {result .shape[0]}/{self.settings.outputSampleRate}hz")
 
                 if receivedData.shape[0] != result.shape[0]:
-                    outputData = pad_array(result, receivedData.shape[0])
+                    # print("TODO FIX:::::PADDING", receivedData.shape[0], result.shape[0])
+                    if self.voiceChanger.voiceChangerType == "LLVC":
+                        outputData = result
+                    else:
+                        outputData = pad_array(result, receivedData.shape[0])
+
                     pass
                 else:
                     outputData = result
