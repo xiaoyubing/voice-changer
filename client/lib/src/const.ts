@@ -13,6 +13,7 @@ export const VoiceChangerType = {
     Beatrice: "Beatrice",
     LLVC: "LLVC",
     WebModel: "WebModel",
+    EasyVC: "EasyVC",
 } as const;
 export type VoiceChangerType = (typeof VoiceChangerType)[keyof typeof VoiceChangerType];
 
@@ -56,6 +57,7 @@ export const F0Detector = {
     crepe_tiny: "crepe_tiny",
     rmvpe: "rmvpe",
     rmvpe_onnx: "rmvpe_onnx",
+    fcpe: "fcpe",
 } as const;
 export type F0Detector = (typeof F0Detector)[keyof typeof F0Detector];
 

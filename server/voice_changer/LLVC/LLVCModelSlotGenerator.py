@@ -1,6 +1,6 @@
 import os
 
-from data.ModelSlot import BeatriceModelSlot, LLVCModelSlot
+from data.ModelSlot import LLVCModelSlot
 from voice_changer.utils.LoadModelParams import LoadModelParams
 from voice_changer.utils.ModelSlotGenerator import ModelSlotGenerator
 

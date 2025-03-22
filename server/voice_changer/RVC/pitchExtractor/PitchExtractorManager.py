@@ -8,6 +8,7 @@ from voice_changer.RVC.pitchExtractor.PitchExtractor import PitchExtractor
 from voice_changer.RVC.pitchExtractor.RMVPEOnnxPitchExtractor import RMVPEOnnxPitchExtractor
 from voice_changer.RVC.pitchExtractor.RMVPEPitchExtractor import RMVPEPitchExtractor
 from voice_changer.utils.VoiceChangerParams import VoiceChangerParams
+from voice_changer.RVC.pitchExtractor.FcpePitchExtractor import FcpePitchExtractor
 
 
 class PitchExtractorManager(Protocol):
@@ -43,6 +44,9 @@ class PitchExtractorManager(Protocol):
             return RMVPEPitchExtractor(cls.params.rmvpe, gpu)
         elif pitchExtractorType == "rmvpe_onnx":
             return RMVPEOnnxPitchExtractor(cls.params.rmvpe_onnx, gpu)
+        elif pitchExtractorType == "fcpe":
+            # add the FcpePitchExtractor
+            return FcpePitchExtractor(gpu)
         else:
             # return hubert as default
             print("[Voice Changer] PitchExctractor not found", pitchExtractorType)
